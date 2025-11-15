@@ -1,0 +1,11 @@
+# Ignore Docker data
+n8n_data/
+ollama_data/
+
+# Ignore log files
+ngrok.log
+*.log
+
+# Ignore sensitive files/credentials if they are in separate files
+*.env
+.env
