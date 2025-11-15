@@ -1,0 +1,301 @@
+{
+  "name": "Food Ordering Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-telegram",
+      "name": "Telegram Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookId": "telegram-bot-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.message?.text }}",
+              "operation": "stringEqual", 
+              "value2": "/start"
+            }
+          ]
+        }
+      },
+      "id": "if-start-command",
+      "name": "Is Start Command",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.callback_query !== undefined }}"
+            }
+          ]
+        }
+      },
+      "id": "if-callback",
+      "name": "Is Callback",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [450, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Send start message\nconst chatId = $input.item.json.message.chat.id;\n\nreturn [{\n\tchatId: chatId,\n\ttext: \"مرحباً بك في مطعمنا! 🍔\\n\\nاختر من القائمة:\",\n\treply_markup: {\n\t\tinline_keyboard: [\n\t\t\t[\n\t\t\t\t{text: \"View Menu 📋\", callback_data: \"menu\"},\n\t\t\t\t{text: \"My Cart 🛒\", callback_data: \"cart\"}\n\t\t\t],\n\t\t\t[\n\t\t\t\t{text: \"Checkout 💳\", callback_data: \"checkout\"},\n\t\t\t\t{text: \"Help ❓\", callback_data: \"help\"}\n\t\t\t]\n\t\t]\n\t}\n}];"
+      },
+      "id": "prepare-start-message",
+      "name": "Prepare Start Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8246352423:AAGe6R3M5VLUXzlWMmFdccQMi2QuNebdZN4/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "send-telegram-message",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle callback queries\nconst callbackData = $input.item.json.callback_query?.data;\nconst chatId = $input.item.json.callback_query?.message?.chat?.id;\nconst messageId = $input.item.json.callback_query?.message?.message_id;\n\nif (callbackData === 'menu') {\n\t// Show menu\n\tconst menuText = `📋 **القائمة**\\n\\n**🍔 Burgers**\\n• BG1 - Classic Burger - 85 EGP\\n• BG2 - Chicken Burger - 75 EGP\\n• BG3 - Cheese Burger - 95 EGP\\n• BG4 - BBQ Burger - 105 EGP\\n\\n**🍟 Sides**\\n• SD1 - French Fries - 30 EGP\\n• SD2 - Onion Rings - 35 EGP\\n• SD3 - Coleslaw - 25 EGP\\n• SD4 - Mozzarella Sticks - 45 EGP\\n\\n**🥤 Drinks**\\n• DR1 - Coca Cola - 15 EGP\\n• DR2 - Orange Juice - 25 EGP\\n• DR3 - Water - 10 EGP\\n• DR4 - Sprite - 15 EGP\\n\\nللطلب: BG1 x2, SD1, DR1`;\n\t\n\treturn [{\n\t\tchat_id: chatId,\n\t\tmessage_id: messageId,\n\t\ttext: menuText,\n\t\tparse_mode: 'Markdown'\n\t}];\n} else if (callbackData === 'cart') {\n\t// Show cart - will fetch from data store\n\treturn [{\n\t\taction: 'show_cart',\n\t\tchatId: chatId,\n\t\tmessageId: messageId\n\t}];\n} else if (callbackData === 'help') {\n\tconst helpText = `📚 **مساعدة**\\n\\n**الطلب المباشر:**\\nBG1 x2, SD1, DR1\\n\\n**الطلب بالنص:**\\nعايز برجرين و بطاطس\\nI want two burgers\\n\\n**الأوامر:**\\n/start - البداية\\n/help - المساعدة`;\n\t\n\treturn [{\n\t\tchat_id: chatId,\n\t\tmessage_id: messageId,\n\t\ttext: helpText,\n\t\tparse_mode: 'Markdown'\n\t}];\n}\n\nreturn [{ chatId: chatId, action: 'unknown' }];"
+      },
+      "id": "handle-callback",
+      "name": "Handle Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [650, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8246352423:AAGe6R3M5VLUXzlWMmFdccQMi2QuNebdZN4/editMessageText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "edit-telegram-message",
+      "name": "Edit Telegram Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse text messages\nconst text = $input.item.json.message?.text || '';\nconst chatId = $input.item.json.message?.chat?.id;\n\nif (!text || !chatId) {\n\treturn [];\n}\n\n// Skip commands\nif (text.startsWith('/')) {\n\treturn [];\n}\n\n// Try structured parsing first\nconst regex = /(BG|SD|DR)(\\d+)(?:\\s*x\\s*(\\d+))?/gi;\nconst matches = [...text.matchAll(regex)];\n\nif (matches.length > 0) {\n\t// Structured codes found\n\tconst items = matches.map(match => ({\n\t\tcode: match[1] + match[2],\n\t\tquantity: match[3] ? parseInt(match[3]) : 1\n\t}));\n\t\n\treturn [{\n\t\tchatId: chatId,\n\t\titems: items,\n\t\tmethod: 'structured',\n\t\toriginalText: text\n\t}];\n} else {\n\t// Need AI extraction\n\treturn [{\n\t\tchatId: chatId,\n\t\ttext: text,\n\t\tmethod: 'need_ai',\n\t\toriginalText: text\n\t}];\n}"
+      },
+      "id": "parse-text",
+      "name": "Parse Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [450, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.method }}",
+              "operation": "equals",
+              "value2": "structured"
+            }
+          ]
+        }
+      },
+      "id": "if-structured",
+      "name": "Has Structured Codes",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Add items to cart\nconst MENU = {\n\t'BG1': { name: 'Classic Burger', price: 85 },\n\t'BG2': { name: 'Chicken Burger', price: 75 },\n\t'BG3': { name: 'Cheese Burger', price: 95 },\n\t'BG4': { name: 'BBQ Burger', price: 105 },\n\t'SD1': { name: 'French Fries', price: 30 },\n\t'SD2': { name: 'Onion Rings', price: 35 },\n\t'SD3': { name: 'Coleslaw', price: 25 },\n\t'SD4': { name: 'Mozzarella Sticks', price: 45 },\n\t'DR1': { name: 'Coca Cola', price: 15 },\n\t'DR2': { name: 'Orange Juice', price: 25 },\n\t'DR3': { name: 'Water', price: 10 },\n\t'DR4': { name: 'Sprite', price: 15 }\n};\n\nconst items = $input.item.json.items;\nconst chatId = $input.item.json.chatId;\n\nlet responseText = '✅ تم إضافة العناصر للسلة:\\n\\n';\nlet total = 0;\nlet validItems = [];\n\nitems.forEach(item => {\n\tconst menuItem = MENU[item.code];\n\tif (menuItem) {\n\t\tconst itemTotal = menuItem.price * item.quantity;\n\t\tresponseText += `• ${menuItem.name} x${item.quantity} - ${itemTotal} EGP\\n`;\n\t\ttotal += itemTotal;\n\t\tvalidItems.push({\n\t\t\tcode: item.code,\n\t\t\tname: menuItem.name,\n\t\t\tprice: menuItem.price,\n\t\t\tquantity: item.quantity\n\t\t});\n\t}\n});\n\nif (validItems.length === 0) {\n\treturn [{\n\t\tchat_id: chatId,\n\t\ttext: '❌ لم أجد عناصر صحيحة في طلبك. استخدم أكواد مثل: BG1 x2, SD1'\n\t}];\n}\n\nresponseText += `\\n💰 **الإجمالي: ${total} EGP**`;\n\nreturn [{\n\tchat_id: chatId,\n\ttext: responseText,\n\tparse_mode: 'Markdown',\n\treply_markup: {\n\t\tinline_keyboard: [\n\t\t\t[\n\t\t\t\t{text: 'View Cart 🛒', callback_data: 'cart'},\n\t\t\t\t{text: 'Checkout 💳', callback_data: 'checkout'}\n\t\t\t],\n\t\t\t[\n\t\t\t\t{text: 'Add More ➕', callback_data: 'menu'}\n\t\t\t]\n\t\t]\n\t},\n\tcartData: {\n\t\titems: validItems,\n\t\ttotal: total\n\t}\n}];"
+      },
+      "id": "process-items",
+      "name": "Process Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 550]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.telegram.org/bot8246352423:AAGe6R3M5VLUXzlWMmFdccQMi2QuNebdZN4/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { chat_id: $json.chat_id, text: $json.text, parse_mode: $json.parse_mode, reply_markup: $json.reply_markup } }}"
+      },
+      "id": "send-cart-response",
+      "name": "Send Cart Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1050, 550]
+    },
+    {
+      "parameters": {},
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 400]
+    }
+  ],
+  "connections": {
+    "Telegram Webhook": {
+      "main": [
+        [
+          {
+            "node": "Is Start Command",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Callback",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Parse Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Start Command": {
+      "main": [
+        [
+          {
+            "node": "Prepare Start Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Start Message": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Callback": {
+      "main": [
+        [
+          {
+            "node": "Handle Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Callback": {
+      "main": [
+        [
+          {
+            "node": "Edit Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Text": {
+      "main": [
+        [
+          {
+            "node": "Has Structured Codes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Structured Codes": {
+      "main": [
+        [
+          {
+            "node": "Process Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Items": {
+      "main": [
+        [
+          {
+            "node": "Send Cart Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Cart Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-11-15T10:00:00.000Z",
+  "versionId": "1"
+}

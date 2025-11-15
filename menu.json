@@ -1,0 +1,106 @@
+{
+  "categories": [
+    {
+      "name": "Burgers",
+      "code_prefix": "BG",
+      "items": [
+        {
+          "code": "BG1",
+          "name": "Classic Burger",
+          "name_ar": "برجر كلاسيك",
+          "price": 85,
+          "description": "Beef patty, lettuce, tomato, cheese"
+        },
+        {
+          "code": "BG2",
+          "name": "Chicken Burger",
+          "name_ar": "برجر دجاج",
+          "price": 75,
+          "description": "Grilled chicken, mayo, lettuce"
+        },
+        {
+          "code": "BG3",
+          "name": "Cheese Burger",
+          "name_ar": "تشيز برجر",
+          "price": 95,
+          "description": "Double cheese, beef patty, pickles"
+        },
+        {
+          "code": "BG4",
+          "name": "BBQ Burger",
+          "name_ar": "برجر باربيكيو",
+          "price": 105,
+          "description": "BBQ sauce, onion rings, beef patty"
+        }
+      ]
+    },
+    {
+      "name": "Sides",
+      "code_prefix": "SD",
+      "items": [
+        {
+          "code": "SD1",
+          "name": "French Fries",
+          "name_ar": "بطاطس محمرة",
+          "price": 30,
+          "description": "Crispy golden fries"
+        },
+        {
+          "code": "SD2",
+          "name": "Onion Rings",
+          "name_ar": "حلقات البصل",
+          "price": 35,
+          "description": "Breaded onion rings"
+        },
+        {
+          "code": "SD3",
+          "name": "Coleslaw",
+          "name_ar": "كول سلو",
+          "price": 25,
+          "description": "Fresh cabbage salad"
+        },
+        {
+          "code": "SD4",
+          "name": "Mozzarella Sticks",
+          "name_ar": "أصابع الموتزاريلا",
+          "price": 45,
+          "description": "Fried mozzarella with marinara"
+        }
+      ]
+    },
+    {
+      "name": "Drinks",
+      "code_prefix": "DR",
+      "items": [
+        {
+          "code": "DR1",
+          "name": "Coca Cola",
+          "name_ar": "كوكاكولا",
+          "price": 15,
+          "description": "330ml can"
+        },
+        {
+          "code": "DR2",
+          "name": "Orange Juice",
+          "name_ar": "عصير برتقال",
+          "price": 25,
+          "description": "Fresh orange juice"
+        },
+        {
+          "code": "DR3",
+          "name": "Water",
+          "name_ar": "مياه",
+          "price": 10,
+          "description": "500ml bottle"
+        },
+        {
+          "code": "DR4",
+          "name": "Sprite",
+          "name_ar": "سبرايت",
+          "price": 15,
+          "description": "330ml can"
+        }
+      ]
+    }
+  ]
+}
