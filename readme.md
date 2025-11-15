@@ -250,7 +250,7 @@ docker restart n8n
 
 3. Verify workflow is activated in n8n UI
 
-## 🎨 WhatsApp Integration (Bonus)
+## 🎨 WhatsApp Integration
 
 To enable WhatsApp admin notifications:
 
