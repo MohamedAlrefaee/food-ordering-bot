@@ -1,0 +1,166 @@
+{
+  "name": "Food Ordering Chatbot - Local LLM",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "2cedf54b-6b42-4639-a89f-f01b93c62682",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "4a6b6f8e-5f6f-44b0-9fcc-92fb86705485",
+      "credentials": {
+        "telegramApi": {
+          "id": "whnemiKrVxz2M230",
+          "name": "Appgain Food Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { prompt: `Extract food order in JSON from this message: \"${$json.message}\"` } }];"
+      },
+      "id": "6020f2f5-b1f9-42b4-b436-88b3eb61d96f",
+      "name": "Prepare Prompt",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON",
+        "body": "={\n  \"model\": \"llama3.1\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an assistant for parsing food orders.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"{{$json.text}}\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "e5bd5e71-f0a1-4683-b23c-8420d6100773",
+      "name": "LLM Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        560,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const msg = $json.choices[0].message.content;\ntry {\n  const parsed = JSON.parse(msg);\n  return [{ json: parsed }];\n} catch(e) {\n  return [{ json: { error: \"Failed to parse order\", raw: msg } }];\n}"
+      },
+      "id": "9b50c869-901d-44ba-9fe1-6c0fd218a52b",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        864,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{$json.chatId}}",
+        "text": "={{ $json.error ? $json.error : \"Order received:\\n\" + JSON.stringify($json, null, 2) }}",
+        "additionalFields": {}
+      },
+      "id": "97c3f53f-f067-4c14-bbb5-840e1b33ad35",
+      "name": "Reply to User",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        0
+      ],
+      "webhookId": "a785c780-e2c5-4c3a-a634-9294a4fca7fb",
+      "credentials": {
+        "telegramApi": {
+          "id": "whnemiKrVxz2M230",
+          "name": "Appgain Food Bot"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Prompt": {
+      "main": [
+        [
+          {
+            "node": "LLM Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Request": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Reply to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "availableInMCP": false,
+    "errorWorkflow": "U4oV3UmX1Qzv70Xb"
+  },
+  "versionId": "5009977e-074e-4f1d-8590-f4c98f570ab3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e9e59685c0913963866a93bfd487235bfd32b822d3a61b3b8fc8816a99afe3b"
+  },
+  "id": "U4oV3UmX1Qzv70Xb",
+  "tags": []
+}
